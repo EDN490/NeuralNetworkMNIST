@@ -1,4 +1,4 @@
-# Sidst opdateret: 2026-09-22 09:10 (Europe/Copenhagen)
+# Sidst opdateret: 2026-09-25 16:20 (Europe/Copenhagen)
 
 """
 NeuralNetworkMNIST.py
@@ -129,6 +129,7 @@ def load_mnist(filename):
         Pixelværdierne fra billedet.
     """
 
+    # Midlertidige Python-lister, som samler data fra CSV-filen.
     images = []
     labels = []
 
@@ -163,7 +164,9 @@ def load_mnist(filename):
             labels.append(label)
             images.append(pixels)
 
-    # Konverterer listen med billeder til et NumPy-array.
+    # Konverterer billedlisten til et NumPy-array.
+    #
+    # X er den almindelige ML-betegnelse for inputdata.
     #
     # Resultatet bliver eksempelvis:
     #
@@ -171,15 +174,18 @@ def load_mnist(filename):
     #
     # 60000 billeder
     # 784 pixelværdier pr. billede
-    images = np.array(images, dtype=np.float32)
+    X = np.array(images, dtype=np.float32)
 
-    # Konverterer labels til et NumPy-array.
+    # Konverterer labellisten til et separat NumPy-array.
+    #
+    # y er en almindelig ML-betegnelse for labels.
     #
     # Resultatet bliver eksempelvis:
     #
     #     (60000,)
     #
-    labels = np.array(labels, dtype=np.int64)
+    # Ét label pr. billede.
+    y = np.array(labels, dtype=np.int64)
 
     # Pixelværdierne går oprindeligt fra 0 til 255.
     #
@@ -188,9 +194,9 @@ def load_mnist(filename):
     #     0.0 og 1.0
     #
     # Det gør dataene nemmere for netværket at arbejde med.
-    images = images / 255.0
+    X = X / 255.0
 
-    return images, labels
+    return X, y
 
 
 # ============================================================
@@ -351,6 +357,33 @@ class NeuralNetwork:
         #
         #     (784, 16)
 
+        # He-initialisering (også kaldet Kaiming-initialisering).
+        #
+        # Det er en almindelig metode til at vælge startværdier
+        # for vægte i lag, der bruger ReLU.
+        #
+        # Formlen for vægtenes standardafvigelse er:
+        #
+        #     sqrt(2 / fan_in)
+        #
+        # fan_in er antallet af inputforbindelser til laget.
+        #
+        # I første lag er der 784 inputværdier, så fan_in = 784.
+        #
+        # Faktoren 2 tager højde for, at ReLU sætter negative
+        # aktiveringer til nul. Skalaen er valgt for at hjælpe
+        # med at holde signalernes størrelse nogenlunde stabil
+        # gennem lagene under træning.
+        #
+        # np.random.randn laver tilfældige værdier med
+        # gennemsnit 0 og standardafvigelse 1.
+        #
+        # Når vi ganger med sqrt(2 / fan_in), skalerer vi
+        # vægtenes standardafvigelse til den ønskede størrelse.
+        #
+        # Det er en velbegrundet standard, men ikke den eneste
+        # mulige måde at initialisere vægte på.
+
         self.W1 = (
             np.random.randn(784, 16)
             * np.sqrt(2 / 784)
@@ -376,6 +409,9 @@ class NeuralNetwork:
         # Derfor:
         #
         #     W2 = (16, 16)
+        #
+        # Dette lag modtager 16 inputværdier pr. billede.
+        # Derfor er fan_in = 16 ved He-initialiseringen.
 
         self.W2 = (
             np.random.randn(16, 16)
@@ -393,6 +429,10 @@ class NeuralNetwork:
         # Derfor:
         #
         #     W3 = (16, 10)
+        #
+        # Outputlaget bruger Softmax og ikke ReLU.
+        # Vi beholder her samme vægtinitialiseringsform
+        # som i den eksisterende simple model.
 
         self.W3 = (
             np.random.randn(16, 10)
